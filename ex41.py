@@ -1,0 +1,90 @@
+# encoding = utf-8
+
+#random.sample()可以从指定的序列中，随机的截取指定长度的片断，不作原地修改。
+#random.shuffle()打乱顺序 本质上就是让序列里面的每一个元素等概率的重新分布在序列的任何位置
+ 
+import random
+from urllib.request import urlopen
+import sys
+
+WORD_URL = "http://learncodethehardway.org/words.txt"
+WORDS = []
+
+PHRASES = {
+    "class ###(###):":
+    "Make a class named ### that is-a ###.",
+    "class ###(object):\n\tdef__init__(self,***)":
+    "class ### has-a__init__that takes self and *** parameters.",
+    "class ###(object):\n\tdef***(self,@@@)":
+    "class ### has-a function named *** that takes self and @@@parameters",
+    "*** = ###()":
+    "Set *** to an instance of class ###",
+    "***.***(@@@)":
+    "From *** get the *** function,and call it with parameters self,@@@.",
+    "***.***='***'":
+    "From *** get the ***  attribute  and set it to ***."
+}
+
+#do the want  to drill phrases first
+
+if len(sys.argv) == 2 and sys.argv[1] == "English":
+    PHRASE_FRIST = True
+else :
+    PHRASE_FRIST = False
+
+#load up the words from the website
+for word in urlopen(WORD_URL).readlines():
+    WORDS.append(word.strip().decode("utf-8"))
+
+
+def convert(snippet, phrase):
+    class_names = [
+        w.capitalize() for w in random.sample(WORDS, snippet.count("###"))
+    ]
+    other_names = random.sample(WORDS, snippet.count("***"))
+
+    results = []
+    param_names = []
+
+    for i in range(0, snippet.count("@@@")):
+        param_count = random.randint(1, 3)
+        param_names.append(','.join(random.sample(WORDS, param_count)))
+
+    for sentence in snippet, phrase:
+        result = sentence[:]
+
+        #fake class names
+        for word in class_names:
+            result = result.replace("###", word, 1)
+
+        #fake other names
+        for word in other_names:
+            result = result.replace("###", word, 1)
+
+        #fake parameter lists
+        for word in param_names:
+            result = result.replace("@@@", word, 1)
+
+        results.append(result)
+
+    return results
+
+
+# keep going until they hit CTRL-D
+try:
+    while True:
+        snippets = list(PHRASES.keys())
+        random.shuffle(snippets)
+
+        for snippet in snippets:
+            phrase = PHRASES[snippet]
+            question, answer = convert(snippet, phrase)
+
+            if PHRASE_FRIST:
+                question, answer = answer, question
+            print(question)
+
+            input(">")
+            print("ANSWER:%s\n\n" % (answer))
+except EOFError:
+    print("\nBye")
